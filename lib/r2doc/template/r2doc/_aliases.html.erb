@@ -1,0 +1,22 @@
+    <h2><a name="aliases"></a>Aliases</h2>
+    
+    <% if ctx.has_aliases? %>
+    <table class="members aliases">
+      <thead>
+        <tr>
+          <th class="namehead">Method</th>
+          <th>Alias</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% ctx.aliases.each_with_index{|al,i| %>
+        <tr class="<%= stripe_class i %>">
+          <td class="name"><%=h al[:old_name] %></td>
+          <td class="new_name">&rarr; <%=h al[:new_name] %></td>
+          <td class="description"><%= al[:description] %></td>
+        </tr>
+      <% } %>
+      </tbody>
+    </table>
+    <% end %>

@@ -1,0 +1,157 @@
+#!/usr/bin/env ruby
+#
+# r2doc is a wrapper script for using the r2doc generator with rdoc.
+#
+# Usage:
+#
+#  r2doc [options] [names...]
+#  r2doc [options] --gems gems...
+#
+# The second format generates documentation for the named gems.  All
+# other options are passed to rdoc.  See the RDoc documenation for more
+# information.
+#
+
+require 'rubygems'
+require 'r2doc'
+
+# Output a help message and continue
+def help_message
+  $stderr.puts <<-EOM
+  Usage:
+
+    r2doc [options] [names...]
+    r2doc [options] --gems gems...
+
+  The first format calls rdoc normally with r2doc set as
+  the generator.  The second format sets rdoc as the
+  generator and generates documentation for the named
+  gems.  One additional option (see below) is specific to
+  r2doc.  All other options are passed through to rdoc.
+  Help for rdoc follows.
+  
+  r2doc-specifc options:
+  
+    --rdoc-version version
+                    Specifices the rdoc version to require.
+                    The version string is passed to gem.
+
+EOM
+end
+
+# Pre-processes arguments before padding to rdoc.
+#
+# This method attempts to be forward-compatible by following very generic
+# rules for processing options.  Theoretically it could handle the short
+# format option (f) incorrectly, because without knowledge of the
+# supported short options, if the f option follows a series of short
+# options which do not accept arguments, it becomes ambiguous.  For
+# example, in the following contrived scenario you can only distinguish
+# between the two uses correctly if you know that the o option accepts
+# and argument and the a flag does not:
+#
+#   r2doc -afchm  # equivalent of -a -f chm
+#   r2doc -aofchm # equivalent of -a -o fchm
+#
+# The risk here seems pretty minimal, however, since something's probably
+# amiss anyway if you're passing the format option to r2doc.
+def process_r2doc_args(args, overrides)
+  processed = []
+  local_options = {}
+  
+  # add the overrides first
+  overrides.each do |o|
+    processed.push "--#{o[0]}"
+    processed.push o[2]
+  end
+  
+  while args.length > 0 do
+    thisOpt = args.shift
+    thisParam = nil
+    if thisOpt =~ /^-/
+      # -- signals the end of options
+      if thisOpt == '--'
+        processed.push thisOpt
+        processed.concat(args) if args.length > 0
+        return processed, local_options
+      end
+      
+      # this is an option, see if we have an argument
+      if longMatch = /^--([^=]+)=(.*)/.match(thisOpt)
+        if longMatch[1] == 'rdoc-version'
+          local_options['rdoc-version'] = longMatch[2]
+        else
+          # don't pass overrides through
+          processed.push thisOpt unless overrides.find{|o| o[0] == longMatch[1]}
+        end
+      elsif longMatch = /^--(.*)/.match(thisOpt)
+        # special case for help, gems, and rdoc-version options
+        if longMatch[1] == 'help'
+          help_message
+          processed.push thisOpt
+        elsif longMatch[1] == 'gems'
+          local_options['gems'] = args
+          return processed, local_options
+        elsif longMatch[1] == 'rdoc-version'
+          local_options['rdoc-version'] = args.shift
+        else
+          # an argument could follow as the next item
+          thisParam = args.shift unless args.first =~ /^-/
+          unless overrides.find{|o| o[0] == longMatch[1]}
+            processed.push thisOpt
+            processed.push thisParam unless thisParam.nil?
+          end
+        end
+      else
+        # short option
+        flag = thisOpt.slice(1, thisOpt.length - 1)
+        if flag == 'h' || flag == '?'
+          help_message
+          processed.push thisOpt
+        else
+          thisParam = args.shift unless args.first =~ /^-/
+          unless overrides.find{|o| o[1] == flag}
+            processed.push thisOpt
+            processed.push thisParam unless thisParam.nil?
+          end
+        end
+      end
+    else
+      # not an option, so processing stops
+      processed.push thisOpt
+      processed.concat(args) if args.length > 0
+      return processed, local_options
+    end
+  end
+  
+  return processed, local_options
+end
+
+begin
+  arguments, local_options = process_r2doc_args(ARGV, [['fmt', 'f', 'r2doc']])
+
+  gem 'rdoc', local_options['rdoc-version'] if local_options.has_key?('rdoc-version')
+  require 'rdoc/rdoc'
+
+  # for gems
+  if local_options.has_key?('gems') && local_options['gems'].length > 0
+    require 'rubygems/doc_manager'
+    Gem::DocManager.configured_args = arguments
+    specs = local_options['gems'].inject([]) do |s,name|
+      found = Gem::SourceIndex.from_installed_gems.find_name(name)
+      spec = found.sort_by {|g| g.version }.last
+      s << spec if spec
+      s
+    end
+    specs.each{|s| Gem::DocManager.new(s).generate_rdoc}
+    
+  # default
+  else
+    r = RDoc::RDoc.new
+    r.document(arguments)
+  end
+
+rescue StandardError => e
+  $stderr.puts e.message
+  exit(1)
+end

@@ -1,0 +1,103 @@
+= R2Doc
+
+R2Doc began as a desire to to create a format for Ruby and Rails
+documentation that would be more useful than anything currently available
+(or at least more useful to me).  Specifically, I had a small set of goals:
+
+* To get rid of the really awful frames
+* To allow easy searching by class or method name
+* To make it easier to scan the lists of methods and attributes
+* To limit line length for easier viewing on wide browsers
+
+As RDoc version 1.0.1 was already packaged as part of the Ruby core and
+version 2 did not yet appear to be stable when I started, I began by
+building a template for version 1.  As soon as I scratched the surface of
+RDoc, I became immediately dismayed by what I found.  The template format
+was arcane, and much of the presentation logic I hoped to change was
+embedded in the generator code.  R2Doc quickly evolved into more than just
+another template.  While still in its very early stages of development,
+R2Doc is a generator that is more easily extended and is very much a second
+set of thoughts on what a framework for documentation generators could and
+_should_ be.  It is my hope that, more than anything, R2Doc will be a
+contribution to the dialog about the future directions of RDoc.
+
+== Features
+
+[RDoc version independent]
+  The R2Doc generator is not limited to a particular version of RDoc.  It
+  has been tested to work with version 1.0.1 and 2.3.0.  Additional
+  versions will be tested as development progresses.
+[Support for multiple templates]
+  While others will hopefully find the default template useful, some people
+  will almost certainly have different preferences for the format.  The
+  beauty of R2Doc is not in its template, but rather in the facilities it
+  provides for creating templates more easily.
+[Pushes presentation logic into the template]
+  My biggest gripe with the current version of RDoc is that more attention
+  should be paid to what makes Rails so successful as a web development
+  framework.  Part of what really works for Rails is that it makes it easy
+  to build an application using a straight-forward MVC pattern and
+  encourages a clean separation between each of the three components of that
+  architecture.  RDoc is made up of parts which correspond to each of those
+  components as well.  A generator is a controller; the context objects
+  representing the classes, modules, files, and methods found in the code are
+  models; and a template is a view.  R2Doc extends the model classes with
+  methods that provide information about the code being documented without
+  directly generating HTML.  This pushes presentation logic into the view,
+  making for cleaner code and more powerful templates.
+[More powerful capabilities within the templates]
+  Another key to the success of Rails is the large collection of utility
+  methods which are specifically made available for use within views.  They
+  make common coding tasks easier to accomplish.	R2Doc adds a small
+  collection of utility methods specifically design to facilitate template
+  authoring.
+[Extensible set of template formats]
+  R2Doc provides an ERB engine for templates by default, but it is not
+  limited to only ERB templates.	Much like Rails, the file extension of a
+  template dictates which engine it is written for.  Template engines can be
+  added to R2Doc and registered to work with additional extensions.  So,
+  engines can easily be added to allow template creation in HAML, XML
+  builder, or nearly anything else you care for.
+
+== Usage
+
+R2Doc is a standard generator, and, as such, can be specified using the
+<tt>-f</tt> or <tt>--fmt</tt> options with the <tt>rdoc</tt> command.  Its
+gem will be automatically discovered by version 2 of RDoc, but version 1 is
+slightly trickier as it relies on the <tt>$:</tt> variable.  To facilitate
+use, R2Doc provides the <tt>r2doc</tt> command.  It's usage is:
+
+  r2doc [options] [names...]     # normal usage
+  r2doc [options] --gems gems... # generate docs for installed gems
+
+The first usage sets options for using R2Doc as the generator and passes
+everything else on to <tt>rdoc</tt>.  The second usage is a specialized
+form for generating docs for an installed gem using the R2Doc generator. 
+By default <tt>r2doc</tt> uses whatever version of RDoc is your default,
+but it includes one additional option, <tt>--rdoc-version</tt>, which allows
+you to specify the RDoc version when multiple gems are installed.
+
+== Creating Templates
+
+R2Doc searches a registered list of directories for templates.	Additional
+directories may be added by calling TemplateManager.add_template_directory
+Templates are folders within registered directories.  So, the default
+directory registered by the gem is lib/r2doc/template (relative to the
+directory where the gem is installed) and the default r2doc template is in the
+folder named lib/r2doc/template/r2doc.
+
+The generator requires template files for index.html, class.html,
+file.html, and rdoc.js.  All non-template files within the template folder
+are copied to the output directory unchanged (this is useful for supporting
+files such as images and stylesheets).	The best reference for writing
+templates are the included template files themselves.  Utility methods
+specific to templates can be found in the R2Doc::TemplateUtil module.  It
+may also be useful to look over the additions to the context objects, which
+are found in the R2Doc::ContextExtensions, R2Doc::ClassExtensions, and
+R2Doc::MethodExtensions modules.
+
+== Creating New Template Engines
+
+Requirements for template engines are explained in the
+R2Doc::TemplateManager class.  Additional engines can be added by calling
+TemplateManager.register_engine.

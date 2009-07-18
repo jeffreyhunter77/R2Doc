@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="<%=h @options.charset %>"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title><%=h "#{klass.name} - #{@options.title}"%></title>
+  <meta http-equiv="Content-Type" content="text/html; charset=<%=h @options.charset %>" />
+  <link rel="stylesheet" href="<%=h path_to(@options.css.nil? ? 'r2doc.css' : @options.css)%>" type="text/css" />
+  <script type="text/javascript" src="<%= path_to 'jquery.js' %>"></script>
+  <script type="text/javascript" src="<%= path_to 'prototype.js' %>"></script>
+  <script type="text/javascript" src="<%= path_to 'rdoc-utils.js' %>"></script>
+  <script type="text/javascript" src="<%= path_to 'rdoc.js' %>"></script>
+  <script type="text/javascript">
+  // <![CDATA[
+  rdoc.currentPath = "<%= @current_path %>";
+  // ]]>
+  </script>
+</head>
+<body>
+  <%= render_partial :nav, {:ctx=>klass} %>
+  
+  <div id="rightside">
+  <div id="topbar">
+    <div class="topcap"><div class="endcap">
+    <div class="quicklinks">
+      <a href="#constants">constants</a> |
+      <a href="#attributes">attributes</a> |
+      <a href="#methods">methods</a>
+    </div>
+    <div class="type"><%= klass.context.is_module? ? 'Module' : 'Class' %></div>
+    <h1><%=h klass.name %></h1>
+    </div></div>
+  </div>
+  
+  <div id="content">
+    <dl class="class_properties">
+      <dt>Inheritance</dt>
+      <dd><% p = klass.superclass; while p do %>
+        <% if p.respond_to?(:path) %>
+        &lt; <%= link_to h(p.name), p %> <% p = p.superclass %>
+        <% else %>
+        &lt; <%= h(p) %> <% p = nil %>
+        <% end %>
+      <% end %></dd>
+      <% if klass.has_includes? %>
+      <dt>Included Modules</dt>
+      <dd><%= klass.includes.collect{|m| m.has_key?(:url) ? link_to(h(m[:name]), m[:url]) : m[:name]}.join(', ') %></dd>
+      <% end %>
+    </dl>
+    
+    <div class="description">
+      <%= klass.description %>
+    </div>
+    
+    <%= render_partial(:classes_and_modules, {:ctx=>klass}) if klass.has_classes_or_modules? %>
+    
+    <%= render_partial(:constants, {:ctx=>klass}) if klass.has_constants? %>
+    
+    <%= render_partial(:attributes, {:ctx=>klass}) if klass.has_attributes? %>
+    
+    <%= render_partial(:aliases, {:ctx=>klass})if klass.has_aliases?  %>
+    
+    <%= render_partial(:method_listing, {:ctx=>klass}) if (klass.has_class_methods? || klass.has_instance_methods?) %>
+    
+    <%= render_partial(:method_details, {:ctx=>klass}) if (klass.has_class_methods? || klass.has_instance_methods?) %>
+
+  </div>
+  </div>
+
+<!-- R2Doc template by Mission Critical Labs, Inc.  -  http://www.missioncriticallabs.com/ --> 
+</body>
+</html>

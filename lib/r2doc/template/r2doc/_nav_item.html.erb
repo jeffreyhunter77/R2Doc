@@ -1,0 +1,1 @@
+            <li class="<%= type %><%= (child == ctx) ? ' thispage' : '' %>"><%= (child == ctx) ? h(child.short_name) : link_to(h(child.short_name), child, :title=>child.name) %></li>

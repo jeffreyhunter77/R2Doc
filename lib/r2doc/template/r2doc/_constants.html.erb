@@ -1,0 +1,22 @@
+    <h2><a name="constants"></a>Constants</h2>
+    
+    <% if ctx.has_constants? %>
+    <table class="members constants">
+      <thead>
+        <tr>
+          <th class="namehead">Name</th>
+          <th>&nbsp;</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% ctx.constants.each_with_index{|constant,i| %>
+        <tr class="<%= stripe_class i %>">
+          <td class="name"><%=h constant[:name] %></td>
+          <td class="value">= <%=h constant[:value] %></td>
+          <td class="description"><%= constant[:description] %></td>
+        </tr>
+      <% } %>
+      </tbody>
+    </table>
+    <% end %>

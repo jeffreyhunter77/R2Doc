@@ -1,0 +1,164 @@
+rdoc.searchList = [<%= (@classes + complete_method_list).sort{|a,b| a.name <=> b.name}.collect{|c| (c.is_method_context?) ? "{display_name:\"#{c.name}\",description:\"(#{c.context.parent.full_name})\",href:\"#{c.path}\"}" : "{display_name:\"#{c.name}\",description:\"\",href:\"#{c.path}\"}"}.join(",") %>];
+
+/**
+ * Auto completion for search box
+ */
+rdoc.SearchAutoCompleter = Class.create();
+Object.extend(rdoc.SearchAutoCompleter.prototype, rdoc.CustomAutoCompleter.prototype);
+Object.extend(rdoc.SearchAutoCompleter.prototype, {
+  /**
+   * Constructor
+   *
+   * @param elem   The element or id to preform autocompletion for
+   * @param chooser The element or id of the window that diplays the choices
+   */
+  initialize: function(elem, chooser) {
+    this.baseInitialize(elem, chooser);
+  },  
+  
+  /**
+   * Retrieve the list of options for autocompletion
+   */
+  delayedUpdate: function() {
+    this.selectedIndex = (this.selectedIndex || this.selectedIndex == 0) ? 0 : null
+    this.newSelections(rdoc.searchList, true);
+  },
+  
+  /**
+   * Called when a pure text entry is selected
+   */
+  determineIds: function() {
+    // no special action needed
+  },
+  
+  /**
+   * Called when a particular item in the list is selected
+   */
+  setIds: function(result) {
+    location = rdoc.genUrl(rdoc.currentPath, result.href);
+  },
+  
+  /**
+   * Do a contains search for a given value
+   */
+  searchForContains: function() {
+    var txt = this.element.value.toUpperCase();
+    var tokens = txt.split(/\s+/);
+    var matches = [];
+    var i, j, matched;
+    
+    for (i = 0; i < rdoc.searchList.length; i++) {
+      matched = 1;
+      for (j = 0; j < tokens.length; j++) {
+        if (rdoc.searchList[i].display_name.toUpperCase().indexOf(tokens[j]) == -1) {
+          matched = 0;
+          break;
+        }
+      }
+      if (matched != 0) matches.push(rdoc.searchList[i]);
+    }
+    
+    this.displaySearchResults(matches);
+  },
+  
+  /**
+   * Displays the search results
+   */
+  displaySearchResults: function(matches) {
+    if (matches.length == 0) {
+      window.location = rdoc.genUrl(rdoc.currentPath, matches[i].href);
+    } else {
+      if (this.updateTimer != null) clearTimeout(this.updateTimer);
+      this.updateTimer = null;
+      this.hide();
+      rdoc.searchDialog.displayResults(matches);
+    }
+  },
+  
+  /**
+   * Set the position for the chooser window
+   * (sadly, Position.close just doesn't work everywhere correctly)
+   */
+  positionChooser: function() {
+    var p = this.element;
+    var left = 0;
+    var top = 0;
+    while (p) {
+      left += p.offsetLeft;
+      top += p.offsetTop;
+      p = p.offsetParent
+    }
+    this.chooser.style.left = left + 'px';
+    this.chooser.style.top  = (top + this.element.offsetHeight) + 'px';
+  },
+  
+  /**
+   * Effect for displaying the chooser.
+   */
+  displayChooser: function() {
+    this.chooser.style.height = '1px';
+    this.chooser.style.width = '120px';
+    jQuery(this.chooser).animate({height: '120px', width: '300px', opacity: 1}, 'fast');
+  }
+
+});
+
+/**
+ * Search results dialog
+ */
+rdoc.SearchResultsDialog = Class.create();
+Object.extend(rdoc.SearchResultsDialog.prototype, rdoc.CustomDialog.prototype);
+Object.extend(rdoc.SearchResultsDialog.prototype, {
+  /**
+   * Constructor
+   */
+  initialize: function() {
+    this.baseInitialize({});
+    this.dialog.className = 'search_results';
+  },
+  
+  /**
+   * Display search results
+   */
+  displayResults: function(results) {
+    var html = '<h1><a onclick="rdoc.searchDialog.close(); return false;"></a>Search Results</h1><ul>';
+    
+    var i;
+    for (i = 0; i < results.length; i++) {
+      html += '<li class="'+(i % 2 == 0 ? 'odd' : 'even')+'" ' +
+        "onclick=\"window.location='" + rdoc.genUrl(rdoc.currentPath, results[i].href) + "'\">" +
+        results[i].display_name.escapeHTML() + '  ' +
+        '<span class="description">' + results[i].description.escapeHTML() + '</span>' +
+        '</li>';
+    }
+    
+    if (results.length == 0) {
+      html += '<li class="odd">No results found</li>';
+    }
+    
+    html += '</ul>';
+    this.dialog.innerHTML = html;
+    this.open();
+  },
+  
+  /**
+   * Return the width of the dialog in pixels
+   */
+  dialogWidth: function() {
+    return 550;
+  }
+
+});
+
+/**
+ * Runs when the document is loaded
+ */
+Event.observe(window, 'load', function(event) {
+  rdoc.searchField = new rdoc.SearchAutoCompleter('search_criteria', 'search_choices');
+  rdoc.searchDialog = new rdoc.SearchResultsDialog();
+  Event.observe($('searchform'), 'submit', function(event) {
+    Event.stop(event);
+    $('search_criteria').blur();
+    rdoc.searchField.searchForContains();
+  });
+});

@@ -1,0 +1,4 @@
+        <tr class="<%= stripe_class i %> <%=h method[:visibility].to_s %>">
+          <td class="visibility"><%=h method[:visibility].to_s %></td>
+          <td class="name"><%= link_to h(method[:name]), method[:url] %> <span class="params"><%= method[:params] %></span></td>
+        </tr>

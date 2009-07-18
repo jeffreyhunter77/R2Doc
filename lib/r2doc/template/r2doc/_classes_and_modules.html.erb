@@ -1,0 +1,13 @@
+    <h2><a name="classes_and_modules"></a>Classes &amp; Modules</h2>
+    
+    <% if ctx.has_classes_or_modules? %>
+    <ul class="classlist">
+      <% ctx.modules.each {|m| %>
+        <li class="module"><%= link_to h(m.name), m %></li>
+      <% } %>
+      <% ctx.classes.each {|c| %>
+        <li class="class"><%= link_to h(c.name), c %></li>
+      <% } %>
+    </ul>
+    <% end %>
+    

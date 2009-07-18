@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="<%=h @options.charset %>"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title><%=h "#{file.name} - #{@options.title}"%></title>
+  <meta http-equiv="Content-Type" content="text/html; charset=<%=h @options.charset %>" />
+  <link rel="stylesheet" href="<%=h path_to(@options.css.nil? ? 'r2doc.css' : @options.css)%>" type="text/css" />
+  <script type="text/javascript" src="<%= path_to 'jquery.js' %>"></script>
+  <script type="text/javascript" src="<%= path_to 'prototype.js' %>"></script>
+  <script type="text/javascript" src="<%= path_to 'rdoc-utils.js' %>"></script>
+  <script type="text/javascript" src="<%= path_to 'rdoc.js' %>"></script>
+  <script type="text/javascript">
+  // <![CDATA[
+  rdoc.currentPath = "<%= @current_path %>";
+  // ]]>
+  </script>
+</head>
+<body>
+  <%= render_partial :nav, {:ctx=>file} %>
+  
+  <div id="rightside">
+  <div id="topbar">
+    <div class="topcap"><div class="endcap">
+    <div class="type">File</div>
+    <h1><%=h file.nil? ? '' : file.name %></h1>
+    </div></div>
+  </div>
+  
+  <div id="content">
+    
+    <div class="description">
+      <%= file.description('index.html') %>
+    </div>
+    
+    <%= render_partial(:classes_and_modules, {:ctx=>file}) if (file && file.has_classes_or_modules?) %>
+    
+  </div>
+  </div>
+  
+<!-- R2Doc template by Mission Critical Labs, Inc.  -  http://www.missioncriticallabs.com/ --> 
+</body>
+</html>

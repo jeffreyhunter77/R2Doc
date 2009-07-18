@@ -1,0 +1,17 @@
+    <a name="method_detail"></a>
+
+    <% if ctx.has_class_methods? %>
+    <h2 class="detail"><a name="class_method_detail"></a>Class Method Detail</h2>
+    
+    <% ctx.class_methods.each{|method| %>
+      <%= render_partial :method_detail, {:method=>method} %>
+    <% } %>
+    <% end %>
+    
+    <% if ctx.has_instance_methods? %>
+    <h2 class="detail"><a name="instance_method_detail"></a>Instance Method Detail</h2>
+
+    <% ctx.instance_methods.each{|method| %>
+      <%= render_partial :method_detail, {:method=>method} %>
+    <% } %>
+    <% end %>

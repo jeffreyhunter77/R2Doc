@@ -1,0 +1,40 @@
+  <div id="nav">
+    <div class="search"><div class="searchback">
+      <form id="searchform">
+      <input type="text" id="search_criteria" name="q" accesskey="s" />
+      <input type="submit" class="invisible" name="go" value="search" />
+      <div class="autocompleteChoices" id="search_choices"></div>
+      </form>
+    </div></div>
+    <div id="searchresults"></div>
+    <div id="navcontents">
+    <% if ctx.name_path_to_parent.length > 0 %>
+    <ul>
+      <li><%= link_to h(@options.title), 'index.html', :title=>@options.title %></li>
+      <% ctx.name_path_to_parent.each{|mod| %>
+      <li>
+        <%= link_to h(mod.short_name), mod, :title=>mod.name %>
+        <% if ((mod == ctx.parent) && mod.has_classes_or_modules?) %>
+        <ul>
+          <% mod.modules.each {|child| %><%= render_partial(:nav_item, {:type=>'module', :ctx=>ctx, :child=>child}) %><% } %>
+          <% mod.classes.each {|child| %><%= render_partial(:nav_item, {:type=>'class', :ctx=>ctx, :child=>child}) %><% } %>
+        </ul>
+        <% end %>
+      </li>
+      <% } %>
+    </ul>
+    <% else %>
+    <ul>
+      <li><%= link_to h(@options.title), 'index.html', :title=>@options.title %>
+        <% if (@topclasses.length > 0 || @topmodules.length > 0) %>
+        <ul>
+          <% @topmodules.find_all{|m| m.document_self || m.has_classes_or_modules?}.each {|child| %><%= render_partial(:nav_item, {:type=>'module', :ctx=>ctx, :child=>child}) %><% } %>
+          <% @topclasses.find_all{|c| c.document_self}.each {|child| %><%= render_partial(:nav_item, {:type=>'class', :ctx=>ctx, :child=>child}) %><% } %>
+        </ul>
+        <% end %>
+      </li>
+    </ul>
+    <% end %>
+    </div>
+    <div class="endcap"></div>
+  </div>
